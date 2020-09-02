@@ -74,7 +74,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
 
   /* USER CODE END USB_MspDeInit 1 */
   }
-} 
+}
 
 /* USER CODE BEGIN 1 */
 
