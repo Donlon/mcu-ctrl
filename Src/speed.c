@@ -7,7 +7,7 @@
 #include "moto_ctrl.h"
 #include "speed.h"
 
-extern moto_ctrl_t g_moto_ctrl ;
+extern moto_ctrl_t g_moto_ctrl;
 
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
@@ -16,34 +16,31 @@ extern moto_ctrl_t g_moto_ctrl ;
 // Tim7 calculate speed and distance by 100ms                               //
 //////////////////////////////////////////////////////////////////////////////
 
-void SpeedMesurement_Init( void )
-{	
-	__HAL_TIM_SET_COUNTER(&htim1,0);
-	__HAL_TIM_SET_COUNTER(&htim3,0);
-	
-	HAL_TIM_Encoder_Start(&htim1,TIM_CHANNEL_ALL);	
-	HAL_TIM_Encoder_Start(&htim3,TIM_CHANNEL_ALL);	
+void SpeedMesurement_Init(void) {
+    __HAL_TIM_SET_COUNTER(&htim1, 0);
+    __HAL_TIM_SET_COUNTER(&htim3, 0);
+
+    HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
 }
 
-void StopSpeedMesurement( void )
-{	
-	HAL_TIM_Base_Stop_IT(&htim7);
+void StopSpeedMesurement(void) {
+    HAL_TIM_Base_Stop_IT(&htim7);
 
-	__HAL_TIM_SET_COUNTER(&htim1,0);
-	__HAL_TIM_SET_COUNTER(&htim3,0);
-	
-	HAL_TIM_Encoder_Stop(&htim1,TIM_CHANNEL_ALL);	
-	HAL_TIM_Encoder_Stop(&htim3,TIM_CHANNEL_ALL);	
+    __HAL_TIM_SET_COUNTER(&htim1, 0);
+    __HAL_TIM_SET_COUNTER(&htim3, 0);
+
+    HAL_TIM_Encoder_Stop(&htim1, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Stop(&htim3, TIM_CHANNEL_ALL);
 }
 
-void CalculateSpeed( void )
-{
+void CalculateSpeed(void) {
 //  uint8_t databuf[128] ;
-	// D=68mm , 3.1415*68/4/13/4.4
-	g_moto_ctrl.right_moto_pulse  = __HAL_TIM_GET_COUNTER(&htim1);
-	g_moto_ctrl.left_moto_pulse   = __HAL_TIM_GET_COUNTER(&htim3);
-	__HAL_TIM_SET_COUNTER(&htim1,0 );
-	__HAL_TIM_SET_COUNTER(&htim3,0 );
+    // D=68mm , 3.1415*68/4/13/4.4
+    g_moto_ctrl.right_moto_pulse = __HAL_TIM_GET_COUNTER(&htim1);
+    g_moto_ctrl.left_moto_pulse = __HAL_TIM_GET_COUNTER(&htim3);
+    __HAL_TIM_SET_COUNTER(&htim1, 0);
+    __HAL_TIM_SET_COUNTER(&htim3, 0);
 
 /*	
   char databuf[128] ;
