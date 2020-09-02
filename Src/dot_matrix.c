@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "spi.h"
 #include "dot_matrix.h"
 
@@ -5,11 +7,20 @@
 #define SHOW_DELAY 10000
 #define SHOW_SPEED 2
 
-uint8_t g_dot_start = 0;
+typedef enum {
+    Vertical,
+    Horizontal,
+} MotionDirection;
 
+MotionDirection motion_direction = Horizontal;
+
+uint8_t g_dot_start = 0;
 uint16_t g_dot_cnt = 0;
 
-#define DISPLAY_CHARS 9
+int display_buffer_available = 0;
+uint8_t display_buffer[8] = {0, };
+
+#define DISPLAY_CHARS 8
 #define MATRIX_COL (DISPLAY_CHARS * 8)
 
 uint8_t g_ShowData[MATRIX_COL] = {
@@ -22,7 +33,6 @@ uint8_t g_ShowData[MATRIX_COL] = {
         0x81, 0xff, 0x81, 0x81, 0x81, 0x81, 0x42, 0x3c,
         0x81, 0xff, 0x8d, 0x0c, 0x0c, 0x8d, 0xff, 0x81,
 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
@@ -76,20 +86,44 @@ void move_dot_matrix(void) {
         } else {
             g_dot_start = 0;
         }
+
+        if (motion_direction == Horizontal) {
+            display_buffer_available = 0;
+        }
     }
 }
 
 void show_dot_matrix(void) {
-    for (uint32_t i = 0; i < COL_NUM; i++) {
-        // p = g_ShowData[i ];
-        uint32_t j = g_dot_start + i;
-
-        if (j > (MATRIX_COL - 1)) {
-            j -= MATRIX_COL;
+    if (motion_direction == Horizontal && !display_buffer_available) {
+        memset(display_buffer, 0, 8);
+        for (uint8_t x = 0; x < 8; x++) {
+            for (uint8_t y = 0; y < 8; y++) {
+                uint8_t x_cor = g_dot_start + x;
+                if (x_cor >= MATRIX_COL) {
+                    x_cor -= MATRIX_COL;
+                }
+                if (g_ShowData[x_cor] & (1u << y)) {
+                    display_buffer[y] |= 1u << (7u - x);
+                }
+            }
         }
-        HAL_SPI_Transmit(&hspi1, g_ShowData + j, 1, 0);
+        display_buffer_available = 1;
+    }
 
-        if (i == 0) {
+    for (uint32_t row = 0; row < COL_NUM; row++) {
+        uint8_t *data_pos = 0;
+        if (motion_direction == Horizontal) {
+            data_pos = display_buffer + row;
+        } else if (motion_direction == Vertical) {
+            uint32_t j = g_dot_start + row;
+            if (j > (MATRIX_COL - 1)) {
+                j -= MATRIX_COL;
+            }
+            data_pos = display_buffer + j;
+        }
+
+        HAL_SPI_Transmit(&hspi1, data_pos, 1, 0);
+        if (row == 0) {
             HAL_GPIO_WritePin(DOT_EN_GPIO_Port, DOT_EN_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(DOT_SHIFT_GPIO_Port, DOT_SHIFT_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(DOT_SHIFT_GPIO_Port, DOT_SHIFT_Pin, GPIO_PIN_SET);
