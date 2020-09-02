@@ -17,7 +17,7 @@
 
 #define MAX_LED  4
 extern mpu6050_t g_mpu6050;
-uint32_t g_SysMode = 2;
+uint32_t g_SysMode = 1;
 
 extern moto_ctrl_t g_moto_ctrl;
 
