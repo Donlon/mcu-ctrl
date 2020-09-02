@@ -6,3 +6,9 @@ MDK-ARM/
 *.o
 *.hex
 *.bin
+
+.cproject
+.project
+CMakeLists.txt
+CMakeLists_template.txt
+mcu_ctrl.xml
