@@ -132,22 +132,22 @@ void ShowLED(uint32_t index, uint32_t mode) {
         }
     } else if (mode == 1) {
         switch (index) {
-            case 0 :
+            case 0:
                 HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
                 HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
                 HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
                 HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
                 break;
-            case 1 :
+            case 1:
                 HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
                 break;
-            case 2 :
+            case 2:
                 HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
                 break;
-            case 3 :
+            case 3:
                 HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
                 break;
-            case 4 :
+            case 4:
                 HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
                 break;
             default:
@@ -155,22 +155,22 @@ void ShowLED(uint32_t index, uint32_t mode) {
         }
     } else if (mode == 2) {
         switch (index) {
-            case 0 :
+            case 0:
                 HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
                 HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
                 HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
                 HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
                 break;
-            case 1 :
+            case 1:
                 HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
                 break;
-            case 2 :
+            case 2:
                 HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
                 break;
-            case 3 :
+            case 3:
                 HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
                 break;
-            case 4 :
+            case 4:
                 HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
                 break;
             default:
@@ -378,6 +378,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                 break;
             case DotMatrix:
                 move_dot_matrix();
+                break;
             case OscWave:
                 if (period_1s <= 10) {
                     period_1s++;
@@ -389,6 +390,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                     sprintf(databuf, "IR_IN=%X\n", g_moto_ctrl.track_in);
                     HAL_UART_Transmit(&huart1, (uint8_t *) databuf, strlen(databuf), 0xFFFF);
                 }
+                break;
             default:
                 break;
         }
@@ -414,14 +416,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                     MotoSpeedOut();
                 }
                 LoopLED();
-                return;
+                break;
             case 1:
                 MPU6050_Get_Accel_Gyro_Temp();
-                return;
+                break;
             case 2:
                 MPU6050_Data_Process();
                 AngleControl();
-                return;
+                break;
             case 3:
                 if ((period_100ms % 2) == 1) {
                     Get_IR_Sensor();
@@ -430,7 +432,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                 } else {
                     Power_IR_Sensor(1);
                 }
-                return;
+                break;
             default:
                 break;
         }

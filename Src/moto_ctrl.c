@@ -35,28 +35,28 @@ void SpeedControl(void) {
     g_moto_ctrl.speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.positon;
     g_moto_ctrl.speed_diff = g_moto_ctrl.speed_ctrl_next - g_moto_ctrl.speed_ctrl_last;
 
-	// g_moto_ctrl.left_speed =  g_moto_ctrl.left_moto_pulse * CAR_SPEED_CONSTANT;
+	// g_moto_ctrl.left_speed = g_moto_ctrl.left_moto_pulse * CAR_SPEED_CONSTANT;
 	// diff =  g_moto_ctrl.left_speed - g_moto_ctrl.speed_set ;
 	// g_moto_ctrl.left_positon += ( diff * SPEED_CONTROL_I ) ;
 	//
 	// g_moto_ctrl.left_speed_ctrl_last = g_moto_ctrl.left_speed_ctrl_next;
-	// g_moto_ctrl.left_speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.left_positon  ;
+	// g_moto_ctrl.left_speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.left_positon;
 	// g_moto_ctrl.left_speed_diff = g_moto_ctrl.left_speed_ctrl_next - g_moto_ctrl.left_speed_ctrl_last;
 	//
 	// g_moto_ctrl.right_speed =  g_moto_ctrl.right_moto_pulse * CAR_SPEED_CONSTANT;
 	// diff = g_moto_ctrl.right_speed - g_moto_ctrl.speed_set;
-	// g_moto_ctrl.right_positon += ( diff * SPEED_CONTROL_I ) ;
+	// g_moto_ctrl.right_positon += (diff * SPEED_CONTROL_I);
 	//
 	// g_moto_ctrl.right_speed_ctrl_last = g_moto_ctrl.right_speed_ctrl_next;
-	// g_moto_ctrl.right_speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.right_positon ;
+	// g_moto_ctrl.right_speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.right_positon;
 	// g_moto_ctrl.right_speed_diff = g_moto_ctrl.right_speed_ctrl_next - g_moto_ctrl.right_speed_ctrl_last;
 }
 
 void SpeedControlOutput(uint8_t period) {
     // g_moto_ctrl.left_speed = g_moto_ctrl.left_speed_diff * (g_moto_ctrl.speed_ctrl_period + period)/SPEED_CONTROL_PERIOD +
-    //                                                     g_moto_ctrl.left_speed_ctrl_last ;
+    //                                                     g_moto_ctrl.left_speed_ctrl_last;
     // g_moto_ctrl.right_speed = g_moto_ctrl.right_speed_diff * (g_moto_ctrl.speed_ctrl_period + period)/SPEED_CONTROL_PERIOD +
-    //                                                     g_moto_ctrl.right_speed_ctrl_last ;
+    //                                                     g_moto_ctrl.right_speed_ctrl_last;
     g_moto_ctrl.speed = g_moto_ctrl.speed_diff * (g_moto_ctrl.speed_ctrl_period + period) / SPEED_CONTROL_PERIOD +
                         g_moto_ctrl.speed_ctrl_last;
 
@@ -94,7 +94,6 @@ void DirectionControl(void) {
         g_moto_ctrl.direction_ctrl_next = 0;
     }
     g_moto_ctrl.direction_diff = g_moto_ctrl.direction_ctrl_next - g_moto_ctrl.direction_ctrl_last;
-
 }
 
 void DirectionControlOutput(uint8_t period) {
