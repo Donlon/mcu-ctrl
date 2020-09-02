@@ -1,7 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include "main.h"
 #include "mpu6050.h"
 #include "moto_ctrl.h"
 

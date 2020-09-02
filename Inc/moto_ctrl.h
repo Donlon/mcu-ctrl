@@ -1,9 +1,10 @@
 #ifndef _MOTO_CTRL_H
 #define _MOTO_CTRL_H
+
 #include "stm32f1xx_hal.h"
 
-#define  CAR_ANGLE_SET				0
-#define  CAR_ANGLE_SPEED_SET	0
+#define  CAR_ANGLE_SET                0
+#define  CAR_ANGLE_SPEED_SET    0
 #define  ANGLE_CONTROL_P      0.2  // P=0.042 D=0.0015
 #define  ANGLE_CONTROL_D      0.02
 
@@ -24,74 +25,84 @@
 #define  CAR_POSITION_MAX     8000
 #define  CAR_POSITION_MIN     (-8000)
 
-
 #define  MOTOR_OUT_DEAD_VAL   0.02
 #define  MOTOR_OUT_MAX        0.8
 #define  MOTOR_OUT_MIN        (-0.8)
 #define  PWM_PERIOD           2000
 
 typedef struct {
-	
-	float angle_ctrl ;
-	int16_t left_moto_pulse ;
-  int16_t right_moto_pulse ;
-	float speed_set ;
-	
-	float moto_pulse ;
-	float speed ;
-	float positon ;
-	float speed_ctrl_last;
-	float speed_ctrl_next;
-	float speed_diff;
-	float speed_ctrl;
+    float angle_ctrl;
+    int16_t left_moto_pulse;
+    int16_t right_moto_pulse;
+    float speed_set;
 
-	float direction ;
-	float direction_ctrl_last;
-	float direction_ctrl_next;
-	float direction_diff;
-	float direction_ctrl;
-	
-  /*
-	float left_speed;
-	float right_speed;
-	float left_positon ;
-	float left_speed_ctrl_last;
-	float left_speed_ctrl_next;
-	float left_speed_diff;
-	float left_speed_ctrl;
-	float right_positon ;
-	float right_speed_ctrl_last;
-	float right_speed_ctrl_next;
-	float right_speed_ctrl;
-	float right_speed_diff;
-	*/
-	float speed_ctrl_period;
-	float direction_ctrl_period;
-	float left_ctrl ;
-	float right_ctrl ;
-	
-	uint8_t track_in ;
-	
-} moto_ctrl_t ;	
+    float moto_pulse;
+    float speed;
+    float positon;
+    float speed_ctrl_last;
+    float speed_ctrl_next;
+    float speed_diff;
+    float speed_ctrl;
+
+    float direction;
+    float direction_ctrl_last;
+    float direction_ctrl_next;
+    float direction_diff;
+    float direction_ctrl;
+
+    // float left_speed;
+    // float right_speed;
+    // float left_positon;
+    // float left_speed_ctrl_last;
+    // float left_speed_ctrl_next;
+    // float left_speed_diff;
+    // float left_speed_ctrl;
+    // float right_positon;
+    // float right_speed_ctrl_last;
+    // float right_speed_ctrl_next;
+    // float right_speed_ctrl;
+    // float right_speed_diff;
+
+    float speed_ctrl_period;
+    float direction_ctrl_period;
+    float left_ctrl;
+    float right_ctrl;
+
+    uint8_t track_in;
+
+} moto_ctrl_t;
 
 
+void Moto_Ctrl_Init(void);
 
-void Moto_Ctrl_Init( void ) ;
 void Motor_Stop(void);
+
 void left_forward(uint16_t value);
+
 void left_backward(uint16_t value);
+
 void right_forward(uint16_t value);
+
 void right_backward(uint16_t value);
 
-void TIM_SetCompare3(TIM_TypeDef* TIMx, uint16_t Compare);
-void TIM_SetCompare4(TIM_TypeDef* TIMx, uint16_t Compare);
-void SetMotorVoltage(float fLeftVoltage, float fRightVoltage) ;
-void AngleControl( void );
-void SpeedControl( void );
-void DirectionControl( void );
-void SpeedControlOutput( uint8_t period );
-void DirectionControlOutput( uint8_t period );
-void MotoOutput( void );
-void MotoSpeedOut( void );
+void TIM_SetCompare3(TIM_TypeDef *TIMx, uint16_t Compare);
+
+void TIM_SetCompare4(TIM_TypeDef *TIMx, uint16_t Compare);
+
+void SetMotorVoltage(float fLeftVoltage, float fRightVoltage);
+
+void AngleControl(void);
+
+void SpeedControl(void);
+
+void DirectionControl(void);
+
+void SpeedControlOutput(uint8_t period);
+
+void DirectionControlOutput(uint8_t period);
+
+void MotoOutput(void);
+
+void MotoSpeedOut(void);
 
 #endif

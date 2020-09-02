@@ -17,7 +17,15 @@
 
 #define MAX_LED  4
 extern mpu6050_t g_mpu6050;
-uint32_t g_SysMode = 1;
+
+typedef enum {
+    BalanceControl = 0,
+    DotMatrix = 1,
+    OscWave = 2,
+    ModeCount = 3,
+} SysMode;
+
+SysMode g_SysMode = DotMatrix;
 
 extern moto_ctrl_t g_moto_ctrl;
 
@@ -213,7 +221,7 @@ void LoopLED(void) {
     counter = 0;
 
     switch (g_SysMode) {
-        case 0 :   // balance control
+        case BalanceControl:   // balance control
             if (index > 0) {
                 index = 0;
                 ShowLED(1, 1);
@@ -228,7 +236,7 @@ void LoopLED(void) {
                 index++;
             }
             break;
-        case 1 :   // dot matrix
+        case DotMatrix:   // dot matrix
             if (index >= 3) {
                 index = 0;
                 ShowLED(1, 0);
@@ -255,7 +263,7 @@ void LoopLED(void) {
                 index++;
             }
             break;
-        case 2 :   // show osc wave
+        case OscWave:   // show osc wave
             if (index >= 6) {
                 index = 0;
                 ShowLED(1, 1);
@@ -288,6 +296,8 @@ void LoopLED(void) {
                 index++;
             }
             break;
+        default:
+            break;
     }
 }
 
@@ -301,26 +311,28 @@ void System_Init(void) {
 
 void SetWorkMode(void) {
     switch (g_SysMode) {
-        case 0 :   // balance control
+        case BalanceControl:   // balance control
             System_Init();
             IR_Sensor_Init();
             HAL_TIM_Base_Start_IT(&htim5); //time for applicationn
             HAL_TIM_Base_Start_IT(&htim6); //read sensor data and  control moto
             HAL_TIM_Base_Stop_IT(&htim7);  //read sensor data and  do not control moto
             break;
-        case 1 :   // dot matrix
+        case DotMatrix:   // dot matrix
             System_Init();
             dot_matrix_init();
             HAL_TIM_Base_Start_IT(&htim5);
             HAL_TIM_Base_Stop_IT(&htim6);
             HAL_TIM_Base_Stop_IT(&htim7);
             break;
-        case 2 :   // show osc wave
+        case OscWave:   // show osc wave
             System_Init();
             IR_Sensor_Init();
             HAL_TIM_Base_Start_IT(&htim5);
             HAL_TIM_Base_Start_IT(&htim6);
             HAL_TIM_Base_Stop_IT(&htim7);
+            break;
+        default:
             break;
     }
 }
@@ -328,24 +340,28 @@ void SetWorkMode(void) {
 
 void UserTask(void) {
     if (ReadUserButton0() == 1) {
-        if (g_SysMode < 2) g_SysMode++;
-        else g_SysMode = 0;
+        if (g_SysMode < 2) {
+            g_SysMode++;
+        } else {
+            g_SysMode = 0;
+        }
         SetWorkMode();
     }
 
     switch (g_SysMode) {
-        case 0 :
+        case BalanceControl:
             break;
-        case 1 :   // dot matrix
+        case DotMatrix:   // dot matrix
             show_dot_matrix();
             break;
-        case 2 :
-
+        case OscWave:
             Uart_OSC_ShowWave(g_mpu6050.accel_x, g_mpu6050.accel_y, g_mpu6050.accel_z, g_mpu6050.gyro_x);
-//			Uart_OSC_ShowWave( g_mpu6050.angle_x , g_mpu6050.gyro_scale_y , g_mpu6050.Angle_Complement_1st, g_mpu6050.gyro_scale_z  ) ;
+			// Uart_OSC_ShowWave( g_mpu6050.angle_x , g_mpu6050.gyro_scale_y , g_mpu6050.Angle_Complement_1st, g_mpu6050.gyro_scale_z  ) ;
+            break;
+        default:
             break;
     }
-//  CheckUartReceivedData();
+    // CheckUartReceivedData();
 }
 
 
@@ -355,24 +371,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     static uint32_t period_1s = 0;
     char databuf[128];
 
-    if (htim == &htim5)  // 100ms
-    {
-        if (g_SysMode == 0) {
-        } else if (g_SysMode == 1) {
-            move_dot_matrix();
-        } else if (g_SysMode == 2) {
-            if (period_1s < 9) period_1s++;
-            else period_1s = 0;
-            if (period_1s == 0) {
-                sprintf(databuf, "IR_IN=%X \n",
-                        g_moto_ctrl.track_in);
-                HAL_UART_Transmit(&huart1, databuf, strlen(databuf), 0xFFFF);
+    if (htim == &htim5) { // 100ms
+        switch (g_SysMode) {
+            case BalanceControl:
+                break;
+            case DotMatrix:
+                move_dot_matrix();
+            case OscWave:
+                if (period_1s < 9) period_1s++;
+                else period_1s = 0;
+                if (period_1s == 0) {
+                    sprintf(databuf, "IR_IN=%X \n",
+                            g_moto_ctrl.track_in);
+                    HAL_UART_Transmit(&huart1, (uint8_t *) databuf, strlen(databuf), 0xFFFF);
 
-            }
+                }
+            default:
+                break;
         }
 
-    } else if (htim == &htim6)  // 1ms
-    {
+    } else if (htim == &htim6) { // 1ms
         period_5ms++;
         if (period_5ms > 4) {
             period_5ms = 0;
@@ -411,8 +429,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             }
             return;
         }
-
-    } else if (htim == &htim7) //5ms
-    {
+    } else if (htim == &htim7) { //5ms
     }
 }

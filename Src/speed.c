@@ -1,8 +1,6 @@
 #include <stdio.h>
-#include <string.h>
 #include "main.h"
 
-#include "usart.h"
 #include "tim.h"
 #include "moto_ctrl.h"
 #include "speed.h"

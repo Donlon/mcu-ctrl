@@ -117,10 +117,8 @@ void DirectionControlOutput(uint8_t period) {
 
 void MotoOutput(void) {
 
-/*
-	g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.left_speed;
-	g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.right_speed;	
-*/
+	// g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.left_speed;
+	// g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.right_speed;
 
     g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed - g_moto_ctrl.direction;
     g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed + g_moto_ctrl.direction;

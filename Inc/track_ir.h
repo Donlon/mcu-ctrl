@@ -1,7 +1,7 @@
 #ifndef __track_ir_H
 #define __track_ir_H
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 #define IR_1_Pin GPIO_PIN_4
@@ -19,9 +19,12 @@
 #define IR_EN_Pin GPIO_PIN_2
 #define IR_EN_GPIO_Port GPIOA
 
-void  IR_Sensor_Init( void );
-void Get_IR_Sensor( void );
-void Power_IR_Sensor( uint8_t on);
+void IR_Sensor_Init(void);
+
+void Get_IR_Sensor(void);
+
+void Power_IR_Sensor(uint8_t on);
+
 #ifdef __cplusplus
 }
 #endif

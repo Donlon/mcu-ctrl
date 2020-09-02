@@ -5,9 +5,8 @@
 #define SHOW_DELAY 10000
 #define SHOW_SPEED 2
 
-uint8_t g_sys_mode = 0;
-
 uint8_t g_dot_start = 0;
+
 uint16_t g_dot_cnt = 0;
 
 #define DISPLAY_CHARS 9
@@ -29,7 +28,6 @@ uint8_t g_ShowData[MATRIX_COL] = {
 
 void dot_matrix_init(void) {
     GPIO_InitTypeDef GPIO_InitStruct;
-    uint8_t i;
 
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5 | GPIO_PIN_7);
     HAL_GPIO_DeInit(DOT_EN_GPIO_Port, DOT_EN_Pin);
@@ -62,7 +60,7 @@ void dot_matrix_init(void) {
 
     HAL_GPIO_WritePin(DOT_LAT_GPIO_Port, DOT_LAT_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(DOT_EN_GPIO_Port, DOT_EN_Pin, GPIO_PIN_SET);
-    for (i = 0; i < COL_NUM; i++) {
+    for (uint8_t i = 0; i < COL_NUM; i++) {
         HAL_GPIO_WritePin(DOT_SHIFT_GPIO_Port, DOT_SHIFT_Pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(DOT_SHIFT_GPIO_Port, DOT_SHIFT_Pin, GPIO_PIN_SET);
     }
@@ -71,26 +69,24 @@ void dot_matrix_init(void) {
 void move_dot_matrix(void) {
     g_dot_cnt++;
 
-    if (g_dot_cnt > SHOW_SPEED) // SHOW_SPEED * 100ms
-    {
+    if (g_dot_cnt > SHOW_SPEED) { // SHOW_SPEED * 100ms
         g_dot_cnt = 0;
-        if (g_dot_start < (MATRIX_COL - 1))
+        if (g_dot_start < (MATRIX_COL - 1)) {
             g_dot_start++;
-        else
+        } else {
             g_dot_start = 0;
+        }
     }
 }
 
 void show_dot_matrix(void) {
-    uint32_t i, j, k;
+    for (uint32_t i = 0; i < COL_NUM; i++) {
+        // p = g_ShowData[i ];
+        uint32_t j = g_dot_start + i;
 
-    for (i = 0; i < COL_NUM; i++) {
-        //		p = g_ShowData[i ];
-        j = g_dot_start + i;
-
-        if (j > (MATRIX_COL - 1))
+        if (j > (MATRIX_COL - 1)) {
             j -= MATRIX_COL;
-
+        }
         HAL_SPI_Transmit(&hspi1, g_ShowData + j, 1, 0);
 
         if (i == 0) {
@@ -104,6 +100,7 @@ void show_dot_matrix(void) {
         }
         HAL_GPIO_WritePin(DOT_LAT_GPIO_Port, DOT_LAT_Pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(DOT_LAT_GPIO_Port, DOT_LAT_Pin, GPIO_PIN_SET);
-        for (k = 0; k < SHOW_DELAY; k++);
+        for (uint32_t k = 0; k < SHOW_DELAY; k++) {
+        }
     }
 }
