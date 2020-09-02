@@ -86,8 +86,8 @@
 #define GYRO_FULL_RANGE_2000                 0x3
 #define GYRO_FULL_RANGE                      GYRO_FULL_RANGE_500
 
-#define GYRO_CONFIG_DATA                     GYRO_FULL_RANGE<<3 | 0x00
-#define ACCEL_CONFIG_DATA                    ACCEL_FULL_RANGE<<3 | 0x00
+#define GYRO_CONFIG_DATA                     ((GYRO_FULL_RANGE << 3) | 0x00)
+#define ACCEL_CONFIG_DATA                    ((ACCEL_FULL_RANGE << 3) | 0x00)
 #define PI                                   3.1415926535
 
 // #define DeltaTime                            0.01              // 10ms
