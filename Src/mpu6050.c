@@ -1,8 +1,10 @@
+#include <math.h>
+#include <string.h>
+
 #include "main.h"
-#include "math.h"
 #include "i2c.h"
 #include "common.h"
-#include "MPU6050.h"
+#include "mpu6050.h"
 //#include "data_process.h"
 
 /*
