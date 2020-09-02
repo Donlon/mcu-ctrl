@@ -115,11 +115,10 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	SetWorkMode();
-  while (1)
-  {
-		UserTask();
-//		HAL_Delay(100);
+  SetWorkMode();
+  while (1) {
+    UserTask();
+    // HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

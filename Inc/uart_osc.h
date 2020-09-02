@@ -1,5 +1,5 @@
 #ifndef __UART_OSC_H
-#define    __UART_OSC_H
+#define __UART_OSC_H
 
 #include "main.h"
 

@@ -1,13 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+
 #include "main.h"
-#include "dma.h"
-#include "i2c.h"
-#include "spi.h"
 #include "tim.h"
 #include "usart.h"
-#include "usb.h"
-#include "gpio.h"
 #include "mpu6050.h"
 #include "uart_osc.h"
 #include "moto_ctrl.h"
@@ -25,7 +21,7 @@ typedef enum {
     ModeCount = 3,
 } SysMode;
 
-SysMode g_SysMode = DotMatrix;
+SysMode g_SysMode = OscWave;
 
 extern moto_ctrl_t g_moto_ctrl;
 
@@ -38,17 +34,21 @@ extern moto_ctrl_t g_moto_ctrl;
 //////////////////////////////////////////////////////////////////////////////
 
 void Kalman_Filter(float angle, float gyro) {
-    static const float Q_angle = 0.001;
-    static const float Q_gyro = 0.003;
+    static const float Q_angle = 0.001f;
+    static const float Q_gyro = 0.003f;
     static const char C_0 = 1;
-    static const float R_angle = 0.5;
+    static const float R_angle = 0.5f;
 
     static float Q_bias, angle_err;
     static float PCt_0, PCt_1, E;
     static float K_0, K_1, t_0, t_1;
-    static float Pdot[4] = {0, 0, 0, 0};
-    static float PP[2][2] = {{1, 0},
-                             {0, 1}};
+    static float Pdot[4] = {
+            0, 0, 0, 0
+    };
+    static float PP[2][2] = {
+            {1, 0},
+            {0, 1}
+    };
 
     g_mpu6050.Angle_Kalman += (gyro - Q_bias) * DeltaTime;
 
@@ -86,22 +86,22 @@ void Kalman_Filter(float angle, float gyro) {
 }
 
 void Complementary_Filter_1st_Order(float angle, float gyro) {
-    const float K1 = 0.02;
-    g_mpu6050.Angle_Complement_1st = K1 * angle + (1 - K1) * (g_mpu6050.Angle_Complement_1st + gyro * DeltaTime);
+    const float K1 = 0.02f;
+    g_mpu6050.Angle_Complement_1st = K1 * angle + (1.f - K1) * (g_mpu6050.Angle_Complement_1st + gyro * DeltaTime);
 }
 
 void Complementary_Filter_2nd_Order(float angle, float gyro) {
-    const float K1 = 0.2;
+    const float K1 = 0.2f;
     float x1, x2, y1;
 
-    x1 = (angle - g_mpu6050.Angle_Complement_2nd) * (1 - K1) * (1 - K1);
+    x1 = (angle - g_mpu6050.Angle_Complement_2nd) * (1.f - K1) * (1.f - K1);
     y1 = y1 + x1 * DeltaTime;
-    x2 = y1 + 2 * (1 - K1) * (angle - g_mpu6050.Angle_Complement_2nd) + gyro;
+    x2 = y1 + 2.f * (1.f - K1) * (angle - g_mpu6050.Angle_Complement_2nd) + gyro;
     g_mpu6050.Angle_Complement_2nd = g_mpu6050.Angle_Complement_2nd + x2 * DeltaTime;
 }
 
 void Complementary_Filter(float angle, float gyro) {
-    g_mpu6050.Angle_Complement_1st += ((angle - g_mpu6050.Angle_Complement_1st) * 0.3 + gyro) * 0.01;
+    g_mpu6050.Angle_Complement_1st += ((angle - g_mpu6050.Angle_Complement_1st) * 0.3f + gyro) * 0.01f;
 }
 
 // index 0 : all , 1~4 : LED1~4 
@@ -109,23 +109,25 @@ void Complementary_Filter(float angle, float gyro) {
 void ShowLED(uint32_t index, uint32_t mode) {
     if (mode == 0) {
         switch (index) {
-            case 0 :
+            case 0:
                 HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
                 HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
                 HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
                 HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
                 break;
-            case 1 :
+            case 1:
                 HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
                 break;
-            case 2 :
+            case 2:
                 HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
                 break;
-            case 3 :
+            case 3:
                 HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
                 break;
-            case 4 :
+            case 4:
                 HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+                break;
+            default:
                 break;
         }
     } else if (mode == 1) {
@@ -148,6 +150,8 @@ void ShowLED(uint32_t index, uint32_t mode) {
             case 4 :
                 HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
                 break;
+            default:
+                break;
         }
     } else if (mode == 2) {
         switch (index) {
@@ -168,6 +172,8 @@ void ShowLED(uint32_t index, uint32_t mode) {
                 break;
             case 4 :
                 HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+                break;
+            default:
                 break;
         }
     }
@@ -301,7 +307,6 @@ void LoopLED(void) {
     }
 }
 
-
 void System_Init(void) {
     Power_IR_Sensor(0);
     MPU6050_Init();
@@ -337,13 +342,11 @@ void SetWorkMode(void) {
     }
 }
 
-
 void UserTask(void) {
     if (ReadUserButton0() == 1) {
-        if (g_SysMode < 2) {
-            g_SysMode++;
-        } else {
-            g_SysMode = 0;
+        g_SysMode++;
+        if (g_SysMode >= ModeCount) {
+            g_SysMode = BalanceControl;
         }
         SetWorkMode();
     }
@@ -351,12 +354,12 @@ void UserTask(void) {
     switch (g_SysMode) {
         case BalanceControl:
             break;
-        case DotMatrix:   // dot matrix
+        case DotMatrix: // dot matrix
             show_dot_matrix();
             break;
         case OscWave:
             Uart_OSC_ShowWave(g_mpu6050.accel_x, g_mpu6050.accel_y, g_mpu6050.accel_z, g_mpu6050.gyro_x);
-			// Uart_OSC_ShowWave( g_mpu6050.angle_x , g_mpu6050.gyro_scale_y , g_mpu6050.Angle_Complement_1st, g_mpu6050.gyro_scale_z  ) ;
+            // Uart_OSC_ShowWave( g_mpu6050.angle_x , g_mpu6050.gyro_scale_y , g_mpu6050.Angle_Complement_1st, g_mpu6050.gyro_scale_z  ) ;
             break;
         default:
             break;
@@ -364,12 +367,10 @@ void UserTask(void) {
     // CheckUartReceivedData();
 }
 
-
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-    static uint8_t period_5ms = 0;
-    static uint8_t period_100ms = 0;
-    static uint32_t period_1s = 0;
-    char databuf[128];
+    static uint8_t period_5ms = 0;   // 1ms/0...4
+    static uint8_t period_100ms = 0; // 5ms/0...19
+    static uint32_t period_1s = 0;   // 100ms/0...9
 
     if (htim == &htim5) { // 100ms
         switch (g_SysMode) {
@@ -378,56 +379,60 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             case DotMatrix:
                 move_dot_matrix();
             case OscWave:
-                if (period_1s < 9) period_1s++;
-                else period_1s = 0;
+                if (period_1s <= 10) {
+                    period_1s++;
+                } else {
+                    period_1s = 0;
+                }
                 if (period_1s == 0) {
-                    sprintf(databuf, "IR_IN=%X \n",
-                            g_moto_ctrl.track_in);
+                    char databuf[16];
+                    sprintf(databuf, "IR_IN=%X\n", g_moto_ctrl.track_in);
                     HAL_UART_Transmit(&huart1, (uint8_t *) databuf, strlen(databuf), 0xFFFF);
-
                 }
             default:
                 break;
         }
-
     } else if (htim == &htim6) { // 1ms
         period_5ms++;
-        if (period_5ms > 4) {
+        if (period_5ms >= 5) {
             period_5ms = 0;
             period_100ms++;
-            if (period_100ms > 19) {
+            if (period_100ms >= 20) {
                 period_100ms = 0;
             }
         }
-        if (period_5ms == 0) {
-            if (period_100ms == 0) {
-                CalculateSpeed();
-                SpeedControl();
-            }
-            SpeedControlOutput(5);
-            DirectionControlOutput(5);
-            MotoOutput();
-            if (g_SysMode == 0) {
-                MotoSpeedOut();
-            }
-            LoopLED();
-            return;
-        } else if (period_5ms == 1) {
-            MPU6050_Get_Accel_Gyro_Temp();
-            return;
-        } else if (period_5ms == 2) {
-            MPU6050_Data_Process();
-            AngleControl();
-            return;
-        } else if (period_5ms == 3) {
-            if ((period_100ms % 2) == 1) {
-                Get_IR_Sensor();
-                DirectionControl();
-                Power_IR_Sensor(0);
-            } else {
-                Power_IR_Sensor(1);
-            }
-            return;
+        switch (period_5ms) {
+            case 0:
+                if (period_100ms == 0) {
+                    CalculateSpeed();
+                    SpeedControl();
+                }
+                SpeedControlOutput(5);
+                DirectionControlOutput(5);
+                MotoOutput();
+                if (g_SysMode == 0) {
+                    MotoSpeedOut();
+                }
+                LoopLED();
+                return;
+            case 1:
+                MPU6050_Get_Accel_Gyro_Temp();
+                return;
+            case 2:
+                MPU6050_Data_Process();
+                AngleControl();
+                return;
+            case 3:
+                if ((period_100ms % 2) == 1) {
+                    Get_IR_Sensor();
+                    DirectionControl();
+                    Power_IR_Sensor(0);
+                } else {
+                    Power_IR_Sensor(1);
+                }
+                return;
+            default:
+                break;
         }
     } else if (htim == &htim7) { //5ms
     }

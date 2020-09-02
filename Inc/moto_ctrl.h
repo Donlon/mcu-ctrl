@@ -3,32 +3,32 @@
 
 #include "stm32f1xx_hal.h"
 
-#define  CAR_ANGLE_SET                0
-#define  CAR_ANGLE_SPEED_SET    0
-#define  ANGLE_CONTROL_P      0.2  // P=0.042 D=0.0015
-#define  ANGLE_CONTROL_D      0.02
+#define  CAR_ANGLE_SET        0.f
+#define  CAR_ANGLE_SPEED_SET  0.f
+#define  ANGLE_CONTROL_P      0.2f  // P=0.042 D=0.0015
+#define  ANGLE_CONTROL_D      0.02f
 
-#define  WHEEL_DIAMETER       82.0  // 82mm
+#define  WHEEL_DIAMETER       82.0d  // 82mm
 #define  WHEEL_PERIMETER      PI*WHEEL_DIAMETER
-#define  ENCODE_CONSTANT      52  // 13*4 
-#define  MOTO_GEARBOX_RATE    4.4 // 1:4.4 1360RPM
-#define  SPEED_CONTROL_PERIOD  100 // 100ms
-#define  CAR_SPEED_CONSTANT   1000.0/SPEED_CONTROL_PERIOD/ENCODE_CONSTANT
-#define  SPEED_CONTROL_P      0.02    //0.03
-#define  SPEED_CONTROL_I      0.0000
+#define  ENCODE_CONSTANT      52.f  // 13*4
+#define  MOTO_GEARBOX_RATE    4.4f // 1:4.4 1360RPM
+#define  SPEED_CONTROL_PERIOD 100.f // 100ms
+#define  CAR_SPEED_CONSTANT   1000.0f/SPEED_CONTROL_PERIOD/ENCODE_CONSTANT
+#define  SPEED_CONTROL_P      0.02f    //0.03
+#define  SPEED_CONTROL_I      0.0000f
 
-#define  DIR_CONTROL_PERIOD  10 // 10ms
-#define  DIR_CONTROL_P      0.1
-#define  DIR_CONTROL_D      0.01
+#define  DIR_CONTROL_PERIOD  10.f // 10ms
+#define  DIR_CONTROL_P       0.1f
+#define  DIR_CONTROL_D       0.01f
 
-#define  CAR_POSITION_SET     0
-#define  CAR_POSITION_MAX     8000
-#define  CAR_POSITION_MIN     (-8000)
+#define  CAR_POSITION_SET     0.f
+#define  CAR_POSITION_MAX     8000.f
+#define  CAR_POSITION_MIN     -8000.f
 
-#define  MOTOR_OUT_DEAD_VAL   0.02
-#define  MOTOR_OUT_MAX        0.8
-#define  MOTOR_OUT_MIN        (-0.8)
-#define  PWM_PERIOD           2000
+#define  MOTOR_OUT_DEAD_VAL   0.02f
+#define  MOTOR_OUT_MAX        0.8f
+#define  MOTOR_OUT_MIN        -0.8f
+#define  PWM_PERIOD           2000.f
 
 typedef struct {
     float angle_ctrl;

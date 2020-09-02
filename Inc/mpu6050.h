@@ -88,10 +88,10 @@
 
 #define GYRO_CONFIG_DATA                     ((GYRO_FULL_RANGE << 3) | 0x00)
 #define ACCEL_CONFIG_DATA                    ((ACCEL_FULL_RANGE << 3) | 0x00)
-#define PI                                   3.1415926535
+#define PI                                   3.141592653589793238462643383279502884197169399375105820974944
 
-// #define DeltaTime                            0.01              // 10ms
-#define DeltaTime                            0.005              // 5ms 
+// #define DeltaTime                            0.01f               // 10ms
+#define DeltaTime                            0.005f              // 5ms
 
 typedef struct {
     int16_t accel_x;
@@ -157,7 +157,7 @@ HAL_StatusTypeDef MPU6050_Mem_Read(uint8_t addr, uint8_t *data);
 
 HAL_StatusTypeDef MPU6050_I2C_Write(uint8_t i2c_addr, uint8_t reg_addr, uint8_t data);
 
-int16_t MPU6050_Data_Read(unsigned char reg_addr);
+int16_t MPU6050_Data_Read(uint8_t reg_addr);
 
 void MPU6050_Get_Accel_Gyro_Temp(void);
 

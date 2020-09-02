@@ -5,7 +5,6 @@
 #include "i2c.h"
 #include "common.h"
 #include "mpu6050.h"
-//#include "data_process.h"
 
 /*
  * 函数名：void InitMPU6050(void)
@@ -17,7 +16,6 @@
 
 I2C_HandleTypeDef *g_MPU6050_i2c = &hi2c2;
 mpu6050_t g_mpu6050;
-
 
 HAL_StatusTypeDef MPU6050_Mem_Write(uint8_t addr, uint8_t data) {
     HAL_StatusTypeDef ret;
@@ -31,14 +29,13 @@ HAL_StatusTypeDef MPU6050_Mem_Read(uint8_t addr, uint8_t *data) {
     return ret;
 }
 
-
-int16_t MPU6050_Data_Read(unsigned char reg_addr) {
+int16_t MPU6050_Data_Read(uint8_t reg_addr) {
     uint8_t H, L;
 
     MPU6050_Mem_Read(reg_addr, (uint8_t *) &H);
     MPU6050_Mem_Read(reg_addr + 1, (uint8_t *) &L);
 
-    return (H << 8) + L;   //合成数据
+    return (H << 8u) + L;   //合成数据
 }
 
 void MPU6050_Init(void) {
@@ -53,13 +50,13 @@ void MPU6050_Init(void) {
     MPU6050_Mem_Write(ACCEL_CONFIG, ACCEL_CONFIG_DATA);
 
     /***********************MAG_SET********************************************/
-	// MPU6050_I2C_Write( MPU6050_AK8963_ADDR , AK8963_CNTL2_REG, AK8963_CNTL2_SRST );
-	// MPU6050_I2C_Write( MPU6050_AK8963_ADDR , AK8963_CNTL1_REG, 0x12 );
+	// MPU6050_I2C_Write(MPU6050_AK8963_ADDR, AK8963_CNTL2_REG, AK8963_CNTL2_SRST);
+	// MPU6050_I2C_Write(MPU6050_AK8963_ADDR, AK8963_CNTL1_REG, 0x12);
 
     /***************************BMP280_SET*************************************/
-	// MPU6050_I2C_Write( BMP280_ADDR , 0xF4, 0x25 );	
+	// MPU6050_I2C_Write(BMP280_ADDR, 0xF4, 0x25);
 
-    MPU6050_Mem_Read(WHO_AM_I, &g_mpu6050.dev_id);
+    MPU6050_Mem_Read(WHO_AM_I, (uint8_t *) &g_mpu6050.dev_id);
 
     int range = ACCEL_FULL_RANGE;
     switch (range) {
@@ -86,16 +83,16 @@ void MPU6050_Init(void) {
 
     switch (range) {
         case GYRO_FULL_RANGE_250 :
-            g_mpu6050.gyro_factor = 131;
+            g_mpu6050.gyro_factor = 131.f;
             break;
         case GYRO_FULL_RANGE_500 :
-            g_mpu6050.gyro_factor = 65.5;
+            g_mpu6050.gyro_factor = 65.5f;
             break;
         case GYRO_FULL_RANGE_1000 :
-            g_mpu6050.gyro_factor = 32.8;
+            g_mpu6050.gyro_factor = 32.8f;
             break;
         case GYRO_FULL_RANGE_2000 :
-            g_mpu6050.gyro_factor = 16.4;
+            g_mpu6050.gyro_factor = 16.4f;
             break;
         default:
             break;
@@ -107,9 +104,9 @@ void MPU6050_Get_Accel_Gyro_Temp(void) {
     g_mpu6050.accel_y = MPU6050_Data_Read(ACCEL_YOUT);
     g_mpu6050.accel_z = MPU6050_Data_Read(ACCEL_ZOUT);
 
-	// g_mpu6050.accel_offs_x = MPU6050_Data_Read( ACCEL_OFFS_XOUT ) ;
-	// g_mpu6050.accel_offs_y = MPU6050_Data_Read( ACCEL_OFFS_YOUT ) ;
-	// g_mpu6050.accel_offs_z = MPU6050_Data_Read( ACCEL_OFFS_ZOUT ) ;
+	// g_mpu6050.accel_offs_x = MPU6050_Data_Read(ACCEL_OFFS_XOUT);
+	// g_mpu6050.accel_offs_y = MPU6050_Data_Read(ACCEL_OFFS_YOUT);
+	// g_mpu6050.accel_offs_z = MPU6050_Data_Read(ACCEL_OFFS_ZOUT);
 
     g_mpu6050.gyro_x = MPU6050_Data_Read(GYRO_XOUT);
 	// g_mpu6050.gyro_y = MPU6050_Data_Read( GYRO_YOUT ) ;
@@ -117,22 +114,22 @@ void MPU6050_Get_Accel_Gyro_Temp(void) {
 
 	// g_mpu6050.temperature = MPU6050_Data_Read( TEMP_OUT ) ;
 
-	// g_mpu6050.gyro_offs_x = MPU6050_Data_Read( GYRO_OFFS_XOUT ) ;
-	// g_mpu6050.gyro_offs_y = MPU6050_Data_Read( GYRO_OFFS_YOUT ) ;
-	// g_mpu6050.gyro_offs_z = MPU6050_Data_Read( GYRO_OFFS_ZOUT ) ;
+	// g_mpu6050.gyro_offs_x = MPU6050_Data_Read(GYRO_OFFS_XOUT);
+	// g_mpu6050.gyro_offs_y = MPU6050_Data_Read(GYRO_OFFS_YOUT);
+	// g_mpu6050.gyro_offs_z = MPU6050_Data_Read(GYRO_OFFS_ZOUT);
 
-	// g_mpu6050.accel_real_offs_x =  g_mpu6050.accel_offs_x  * 0.00098 ;
-	// g_mpu6050.accel_real_offs_y =  g_mpu6050.accel_offs_y  * 0.00098 ;
-	// g_mpu6050.accel_real_offs_z =  g_mpu6050.accel_offs_z  * 0.00098 ;
-	// g_mpu6050.gyro_real_offs_x =  g_mpu6050.gyro_offs_x * 4 / ( 2 ^ GYRO_FULL_RANGE ) / 131.072 ;
-	// g_mpu6050.gyro_real_offs_y =  g_mpu6050.gyro_offs_y * 4 / ( 2 ^ GYRO_FULL_RANGE ) / 131.072 ;
-	// g_mpu6050.gyro_real_offs_z =  g_mpu6050.gyro_offs_z * 4 / ( 2 ^ GYRO_FULL_RANGE ) / 131.072 ;
+	// g_mpu6050.accel_real_offs_x = g_mpu6050.accel_offs_x * 0.00098;
+	// g_mpu6050.accel_real_offs_y = g_mpu6050.accel_offs_y * 0.00098;
+	// g_mpu6050.accel_real_offs_z = g_mpu6050.accel_offs_z * 0.00098;
+	// g_mpu6050.gyro_real_offs_x = g_mpu6050.gyro_offs_x * 4 / (2 ^ GYRO_FULL_RANGE) / 131.072;
+	// g_mpu6050.gyro_real_offs_y = g_mpu6050.gyro_offs_y * 4 / (2 ^ GYRO_FULL_RANGE) / 131.072;
+	// g_mpu6050.gyro_real_offs_z = g_mpu6050.gyro_offs_z * 4 / (2 ^ GYRO_FULL_RANGE) / 131.072;
 }
 
 void MPU6050_Data_Process(void) {
-	// g_mpu6050.accel_scale_x =  g_mpu6050.accel_x  >> g_mpu6050.accel_factor ;
-	// g_mpu6050.accel_scale_y =  g_mpu6050.accel_y  >> g_mpu6050.accel_factor ;
-	// g_mpu6050.accel_scale_z =  g_mpu6050.accel_z  >> g_mpu6050.accel_factor ;
+	// g_mpu6050.accel_scale_x = g_mpu6050.accel_x >> g_mpu6050.accel_factor;
+	// g_mpu6050.accel_scale_y = g_mpu6050.accel_y >> g_mpu6050.accel_factor;
+	// g_mpu6050.accel_scale_z = g_mpu6050.accel_z >> g_mpu6050.accel_factor;
 
     g_mpu6050.gyro_scale_x = g_mpu6050.gyro_x / g_mpu6050.gyro_factor;
 	// g_mpu6050.gyro_scale_y =  -1 * g_mpu6050.gyro_y  / g_mpu6050.gyro_factor ;   // direction must be same as angle
@@ -140,7 +137,7 @@ void MPU6050_Data_Process(void) {
 
 	// g_mpu6050.temperature_real = g_mpu6050.temperature / 333.87 + 21;
 
-    g_mpu6050.angle_y = atan2(g_mpu6050.accel_y, g_mpu6050.accel_z) * 180.0 / PI;
+    g_mpu6050.angle_y = atan2f(g_mpu6050.accel_y, g_mpu6050.accel_z) * 180.0f / (float) PI;
 	// g_mpu6050.angle_x = g_mpu6050.accel_x * 180 / 16384 / 3.1415926535 ;
 	// g_mpu6050.angle_y = atan2( g_mpu6050.accel_y , g_mpu6050.accel_z ) * 180.0 / PI;
 	// g_mpu6050.angle_z = atan2( g_mpu6050.accel_z , g_mpu6050.accel_y ) * 180.0 / PI;
