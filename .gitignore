@@ -3,6 +3,8 @@ Drivers/
 .vscode/
 MDK-ARM/
 
+cmake-build-*/
+
 *.o
 *.hex
 *.bin
