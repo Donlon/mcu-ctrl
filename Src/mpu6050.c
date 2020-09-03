@@ -144,7 +144,9 @@ void MPU6050_Data_Process(void) {
 
     Complementary_Filter_1st_Order(g_mpu6050.angle_y, g_mpu6050.gyro_scale_x);
     // Complementary_Filter_2nd_Order( g_mpu6050.angle_x , g_mpu6050.gyro_scale_y );
-    // Kalman_Filter( g_mpu6050.angle_x , g_mpu6050.gyro_scale_y );
+#ifdef KALMAN_FILTER_GYRO
+    Kalman_Filter(g_mpu6050.angle_y, g_mpu6050.gyro_scale_x);
+#endif
     // Complementary_Filter ( g_mpu6050.angle_x , g_mpu6050.gyro_scale_y );
 }
 

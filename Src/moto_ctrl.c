@@ -20,8 +20,13 @@ void Moto_Ctrl_Init(void) {
 }
 
 void AngleControl(void) {
+#ifdef KALMAN_FILTER_GYRO
+    float p = (CAR_ANGLE_SET - g_mpu6050.Angle_Kalman) * angle_control_p;
+    float d = (CAR_ANGLE_SPEED_SET - g_mpu6050.Gyro_Kalman) * angle_control_d;
+#else
     float p = (CAR_ANGLE_SET - g_mpu6050.Angle_Complement_1st) * angle_control_p;
     float d = (CAR_ANGLE_SPEED_SET - g_mpu6050.gyro_scale_x) * angle_control_d;
+#endif
     g_moto_ctrl.angle_ctrl_p = p;
     g_moto_ctrl.angle_ctrl_d = d;
     g_moto_ctrl.angle_ctrl = p + d;
