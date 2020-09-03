@@ -344,6 +344,91 @@ void SetWorkMode(void) {
     }
 }
 
+#define RECV_BUF_SIZE 128
+
+char recvBuf[RECV_BUF_SIZE];
+uint8_t recvData = 0;
+uint16_t recvLen = 0;
+
+int recv_buf_processed = 1;
+
+#define imin(a, b) (((a) < (b)) ? (a) : (b))
+
+char *ParseUartCommand(char *str, int len) {
+    if (len < 3) {
+        return 0;
+    }
+    char numbuf[16];
+    char item = str[0];
+    //assert(str[1] == '=');
+    char *p = str + 2;
+    char *p_buf = numbuf;
+    char *end = str + 2 + imin(len - 2, 15);
+    while (p < end) {
+        char ch = *p;
+        if (ch == ';' || ch == '\r' || ch == '\n' || ch == ' ') {
+            p++;
+            break;
+        }
+        if (ch == '\0') {
+            break;
+        }
+        *p_buf = ch;
+        p++;
+        p_buf++;
+    }
+    *p_buf = '\0';
+
+    float num = atof(numbuf);
+    switch (item) {
+        case 'P':
+        case 'p':
+            angle_control_p = num;
+            break;
+        case 'D':
+        case 'd':
+            angle_control_d = num;
+            break;
+        default:
+            break;
+    }
+    return p;
+}
+
+void ProcessUartRecvBuffer() {
+    char *buf = recvBuf;
+    int len = recvLen;
+    while (len > 0) {
+        char *new_buf = ParseUartCommand(buf, len);
+        if (!new_buf) {
+            break;
+        }
+        len -= (int) (new_buf - buf);
+        buf = new_buf;
+    }
+
+    // recv_buf_processed = 1;
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    if (huart->Instance == huart3.Instance) {
+        if (recvLen < RECV_BUF_SIZE - 1) {
+            if (recvData == '\r' || recvData == '\n') {
+                if (recvLen > 0) {
+                    ProcessUartRecvBuffer();
+                }
+                recvBuf[recvLen] = '\0';
+                recvLen = 0;
+            } else {
+                recvBuf[recvLen++] = recvData;
+            }
+        } else { // Too long
+            recvLen = 0;
+        }
+        HAL_UART_Receive_IT(&huart3, &recvData, 1);
+    }
+}
+
 void UserTask(void) {
     if (ReadUserButton0() == 1) {
         g_SysMode++;
