@@ -6,7 +6,10 @@
 #define  CAR_ANGLE_SET        0.f
 #define  CAR_ANGLE_SPEED_SET  0.f
 #define  ANGLE_CONTROL_P      0.2f  // P=0.042 D=0.0015
-#define  ANGLE_CONTROL_D      0.02f
+#define  ANGLE_CONTROL_D      0.002f
+
+extern float angle_control_p;
+extern float angle_control_d;
 
 #define  WHEEL_DIAMETER       82.0f  // 82mm
 #define  WHEEL_PERIMETER      (PI*WHEEL_DIAMETER)
@@ -32,6 +35,9 @@
 
 typedef struct {
     float angle_ctrl;
+
+    float angle_ctrl_p;
+    float angle_ctrl_d;
 
     // pulse/100ms
     int16_t left_moto_pulse;
@@ -68,6 +74,8 @@ typedef struct {
 
     float speed_ctrl_period;
     float direction_ctrl_period;
+
+    // for PWM output
     float left_ctrl;
     float right_ctrl;
 

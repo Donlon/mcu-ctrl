@@ -434,6 +434,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                     Power_IR_Sensor(1);
                 }
                 break;
+            case 4:
+                Uart_OSC_ShowWave(g_mpu6050.Angle_Complement_1st,
+                                  (int) (g_moto_ctrl.angle_ctrl * 10.f),
+                                  (int) (g_moto_ctrl.angle_ctrl_p * 10.f),
+                                  (int) (g_moto_ctrl.angle_ctrl_d * 10.f));
+                break;
             default:
                 break;
         }

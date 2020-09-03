@@ -8,6 +8,9 @@
 extern TIM_HandleTypeDef htim8;
 extern mpu6050_t g_mpu6050;
 
+float angle_control_p = ANGLE_CONTROL_P;
+float angle_control_d = ANGLE_CONTROL_D;
+
 moto_ctrl_t g_moto_ctrl;
 
 void Moto_Ctrl_Init(void) {
@@ -17,11 +20,11 @@ void Moto_Ctrl_Init(void) {
 }
 
 void AngleControl(void) {
-    float fVal;
-
-    fVal = (CAR_ANGLE_SET - g_mpu6050.Angle_Complement_1st) * ANGLE_CONTROL_P +
-           (CAR_ANGLE_SPEED_SET - g_mpu6050.gyro_scale_x) * ANGLE_CONTROL_D;
-    g_moto_ctrl.angle_ctrl = fVal;
+    float p = (CAR_ANGLE_SET - g_mpu6050.Angle_Complement_1st) * angle_control_p;
+    float d = (CAR_ANGLE_SPEED_SET - g_mpu6050.gyro_scale_x) * angle_control_d;
+    g_moto_ctrl.angle_ctrl_p = p;
+    g_moto_ctrl.angle_ctrl_d = d;
+    g_moto_ctrl.angle_ctrl = p + d;
 }
 
 void SpeedControl(void) {
