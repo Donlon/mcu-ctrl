@@ -1,4 +1,3 @@
-// #include <stm32f1xx_hal_uart.h>
 #include "main.h"
 #include "usart.h"
 #include "debugging.h"

@@ -23,7 +23,7 @@ typedef enum {
     ModeCount = 3,
 } SysMode;
 
-SysMode g_SysMode = OscWave;
+SysMode g_SysMode = BalanceControl;
 
 extern moto_ctrl_t g_moto_ctrl;
 
@@ -445,38 +445,68 @@ void UserTask(void) {
             show_dot_matrix();
             break;
         case OscWave:
-            Uart_OSC_ShowWave(g_mpu6050.accel_x, g_mpu6050.accel_y, g_mpu6050.accel_z, g_mpu6050.gyro_x);
+            // Uart_OSC_ShowWave(g_mpu6050.accel_x, g_mpu6050.accel_y, g_mpu6050.accel_z, g_mpu6050.gyro_x);
             // Uart_OSC_ShowWave( g_mpu6050.angle_x , g_mpu6050.gyro_scale_y , g_mpu6050.Angle_Complement_1st, g_mpu6050.gyro_scale_z  ) ;
             break;
         default:
             break;
     }
+    if (recv_buf_processed) {
+        recv_buf_processed = 0;
+        HAL_UART_Receive_IT(&huart3, &recvData, 1);
+    }
     // CheckUartReceivedData();
+}
+
+void PrintIrSensorData(uint8_t data) {
+#define IR_C(x) ((x) ? 'x' : '-')
+    char s[8];
+    s[0] = IR_C(data & 0x01u);
+    s[1] = IR_C(data & 0x02u);
+    s[2] = IR_C(data & 0x04u);
+    s[3] = IR_C(data & 0x08u);
+    s[4] = IR_C(data & 0x10u);
+    s[5] = IR_C(data & 0x20u);
+    printf("[IR]: %s\r\n", s);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     static uint8_t period_5ms = 0;   // 1ms/0...4
     static uint8_t period_100ms = 0; // 5ms/0...19
     static uint32_t period_1s = 0;   // 100ms/0...9
+    static uint32_t period_10s = 0;   // 1m/0...9
+    static uint32_t secs = 0;
 
     if (htim == &htim5) { // 100ms
+        period_1s++;
+        if (period_1s >= 10) { // 1s
+            period_1s = 0;
+            period_10s++;
+            secs++;
+            if (period_10s >= 10) {
+                period_10s = 0;
+            }
+        }
         switch (g_SysMode) {
             case BalanceControl:
+                if (period_1s == 0 && (secs % 3) == 0) {
+                    PrintIrSensorData(g_moto_ctrl.track_in);
+                }
+                if (period_1s == 0) {
+                    float r;
+                    if (g_moto_ctrl.right_moto_pulse == 0) {
+                        r = -1.f;
+                    } else {
+                        r = (float) g_moto_ctrl.left_moto_pulse / (float) g_moto_ctrl.right_moto_pulse;
+                    }
+                    printf("[speed] motor pulse: L=%d, R=%d, ratio: %.2f...\r\n",
+                           g_moto_ctrl.left_moto_pulse, g_moto_ctrl.right_moto_pulse, r);
+                }
                 break;
             case DotMatrix:
                 move_dot_matrix();
                 break;
             case OscWave:
-                if (period_1s <= 10) {
-                    period_1s++;
-                } else {
-                    period_1s = 0;
-                }
-                if (period_1s == 0) {
-                    char databuf[16];
-                    sprintf(databuf, "IR_IN=%X\n", g_moto_ctrl.track_in);
-                    HAL_UART_Transmit(&huart1, (uint8_t *) databuf, strlen(databuf), 0xFFFF);
-                }
                 break;
             default:
                 break;
@@ -493,7 +523,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         }
         switch (period_5ms) {
             case 0:
-                if (period_100ms == 0) {
+                if (period_100ms == 0) { // per 100ms
                     CalculateSpeed();
                     SpeedControl();
                 }

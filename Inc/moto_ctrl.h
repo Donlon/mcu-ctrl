@@ -5,8 +5,8 @@
 
 #define  CAR_ANGLE_SET        0.f
 #define  CAR_ANGLE_SPEED_SET  0.f
-#define  ANGLE_CONTROL_P      0.2f  // P=0.042 D=0.0015
-#define  ANGLE_CONTROL_D      0.002f
+#define  ANGLE_CONTROL_P      0.18f  // P=0.042 D=0.0015
+#define  ANGLE_CONTROL_D      0.01f
 
 extern float angle_control_p;
 extern float angle_control_d;

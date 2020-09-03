@@ -125,16 +125,26 @@ void MotoOutput(void) {
 	g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.left_speed;
 	g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.right_speed;
 #else
+#if 0
     g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed - g_moto_ctrl.direction;
     g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed + g_moto_ctrl.direction;
+#else
+    g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed;
+    g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed;
+#endif
 #endif
 }
 
 void MotoSpeedOut(void) {
     float leftVal, rightVal;
 
+#if 0
     leftVal = g_moto_ctrl.left_ctrl;
     rightVal = g_moto_ctrl.right_ctrl;
+#else
+    leftVal = -g_moto_ctrl.left_ctrl;
+    rightVal = -g_moto_ctrl.right_ctrl;
+#endif
 
     if (leftVal > 0) {
         leftVal += MOTOR_OUT_DEAD_VAL;

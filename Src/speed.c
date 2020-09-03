@@ -40,9 +40,4 @@ void CalculateSpeed(void) {
     g_moto_ctrl.left_moto_pulse = __HAL_TIM_GET_COUNTER(&htim3);
     __HAL_TIM_SET_COUNTER(&htim1, 0);
     __HAL_TIM_SET_COUNTER(&htim3, 0);
-
-    // char databuf[128] ;
-    // sprintf(databuf, "L=%d ;R=%d\n",
-    //         g_moto_ctrl.left_moto_pulse, g_moto_ctrl.right_moto_pulse);
-    // HAL_UART_Transmit(&huart1, databuf, strlen(databuf), 0xFFFF);
 }
