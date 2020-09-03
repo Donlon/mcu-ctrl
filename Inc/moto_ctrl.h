@@ -59,18 +59,20 @@ typedef struct {
     float direction_diff;
     float direction_ctrl;
 
-    // float left_speed;
-    // float right_speed;
-    // float left_positon;
-    // float left_speed_ctrl_last;
-    // float left_speed_ctrl_next;
-    // float left_speed_diff;
-    // float left_speed_ctrl;
-    // float right_positon;
-    // float right_speed_ctrl_last;
-    // float right_speed_ctrl_next;
-    // float right_speed_ctrl;
-    // float right_speed_diff;
+#ifdef SPEED_CTRL
+    float left_speed;
+    float right_speed;
+    float left_positon;
+    float left_speed_ctrl_last;
+    float left_speed_ctrl_next;
+    float left_speed_diff;
+    float left_speed_ctrl;
+    float right_positon;
+    float right_speed_ctrl_last;
+    float right_speed_ctrl_next;
+    float right_speed_ctrl;
+    float right_speed_diff;
+#endif
 
     float speed_ctrl_period;
     float direction_ctrl_period;
