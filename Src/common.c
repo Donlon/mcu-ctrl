@@ -217,10 +217,10 @@ uint32_t ReadUserButton1(void) {
 
 //////////////////////////////////////////////////////
 
-void LoopLED(void) {
+void LoopLED(void) { //  called per 100ms
     static uint8_t index = 0;
     static uint32_t counter = 0;
-    if (counter < 199) {
+    if (counter <= 2) {
         counter++;
         return;
     }
@@ -394,6 +394,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             default:
                 break;
         }
+        LoopLED();
     } else if (htim == &htim6) { // 1ms
         period_5ms++;
         if (period_5ms >= 5) {
@@ -415,9 +416,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                 if (g_SysMode == 0) {
                     MotoSpeedOut();
                 }
-                LoopLED();
                 break;
             case 1:
+                // read from sensor
                 MPU6050_Get_Accel_Gyro_Temp();
                 break;
             case 2:
