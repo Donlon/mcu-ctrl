@@ -149,6 +149,7 @@ void MotoSpeedOut(void) {
     SetMotorVoltage(leftVal, rightVal);
 }
 
+// Set output voltage via PWM
 void SetMotorVoltage(float fLeftVoltage, float fRightVoltage) {
     if (fLeftVoltage > 0) {
         left_backward((uint16_t) (fLeftVoltage * PWM_PERIOD));
@@ -161,53 +162,54 @@ void SetMotorVoltage(float fLeftVoltage, float fRightVoltage) {
         right_forward((uint16_t) (-1 * fRightVoltage * PWM_PERIOD));
     }
 }
+#define LEFT_PWM_CHANNEL TIM_CHANNEL_4
+#define RIGHT_PWM_CHANNEL TIM_CHANNEL_3
 
 void left_forward(uint16_t value) {
-    HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_4);
+    HAL_TIM_PWM_Stop(&htim8, LEFT_PWM_CHANNEL);
 
     HAL_GPIO_WritePin(MT1_A_GPIO_Port, MT1_A_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(MT1_B_GPIO_Port, MT1_B_Pin, GPIO_PIN_RESET);
 
     TIM_SetCompare4(TIM8, value);
-    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
+    HAL_TIM_PWM_Start(&htim8, LEFT_PWM_CHANNEL);
 }
 
 void left_backward(uint16_t value) {
-    HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_4);
+    HAL_TIM_PWM_Stop(&htim8, LEFT_PWM_CHANNEL);
     HAL_GPIO_WritePin(MT1_A_GPIO_Port, MT1_A_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(MT1_B_GPIO_Port, MT1_B_Pin, GPIO_PIN_SET);
 
     TIM_SetCompare4(TIM8, value);
-    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
+    HAL_TIM_PWM_Start(&htim8, LEFT_PWM_CHANNEL);
 }
 
 void right_forward(uint16_t value) {
-    HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Stop(&htim8, RIGHT_PWM_CHANNEL);
     HAL_GPIO_WritePin(MT2_B_GPIO_Port, MT2_B_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(MT2_A_GPIO_Port, MT2_A_Pin, GPIO_PIN_RESET);
 
     TIM_SetCompare3(TIM8, value);
-    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim8, RIGHT_PWM_CHANNEL);
 }
 
 void right_backward(uint16_t value) {
-    HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Stop(&htim8, RIGHT_PWM_CHANNEL);
     HAL_GPIO_WritePin(MT2_B_GPIO_Port, MT2_B_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(MT2_A_GPIO_Port, MT2_A_Pin, GPIO_PIN_SET);
 
     TIM_SetCompare3(TIM8, value);
-    HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim8, RIGHT_PWM_CHANNEL);
 }
 
 void Motor_Stop(void) {
-    HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_3);
-    HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_4);
+    HAL_TIM_PWM_Stop(&htim8, RIGHT_PWM_CHANNEL);
+    HAL_TIM_PWM_Stop(&htim8, LEFT_PWM_CHANNEL);
     HAL_GPIO_WritePin(MT1_A_GPIO_Port, MT2_A_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(MT1_B_GPIO_Port, MT2_B_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(MT2_A_GPIO_Port, MT2_A_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(MT2_B_GPIO_Port, MT2_B_Pin, GPIO_PIN_RESET);
 }
-
 
 void TIM_SetCompare3(TIM_TypeDef *TIMx, uint16_t Compare) {
     /* Check the parameters */
@@ -222,5 +224,3 @@ void TIM_SetCompare4(TIM_TypeDef *TIMx, uint16_t Compare) {
     /* Set the Capture Compare2 Register value */
     TIMx->CCR4 = Compare;
 }
-
-
