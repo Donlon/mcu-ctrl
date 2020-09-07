@@ -31,6 +31,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "common.h"
+#include "esp8266.h"
 #include "mpu6050.h"
 #include "speed.h"
 
@@ -122,6 +123,7 @@ int main(void)
   puts("==============================\r");
   puts("========= System up. =========\r");
   puts("==============================\r");
+  esp8266_init_ap();
   SetWorkMode();
   while (1) {
     UserTask();

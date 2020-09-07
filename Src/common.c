@@ -12,6 +12,7 @@
 #include "dot_matrix.h"
 #include "speed.h"
 #include "track_ir.h"
+#include "esp8266.h"
 
 #define MAX_LED  4
 extern mpu6050_t g_mpu6050;
@@ -442,6 +443,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
             recvLen = 0;
         }
         HAL_UART_Receive_IT(&huart3, &recvData, 1);
+    } else if (huart->Instance == huart5.Instance) {
+        esp8266_uart_handler(huart);
     }
 }
 

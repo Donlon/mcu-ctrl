@@ -2,7 +2,7 @@
 #include "usart.h"
 #include "uart_osc.h"
 
-UART_HandleTypeDef *g_uart_osc = &huart5;
+UART_HandleTypeDef *g_uart_osc = &huart1;
 
 typedef union {
     int16_t data16;
