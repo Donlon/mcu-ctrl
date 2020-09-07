@@ -23,7 +23,15 @@ typedef enum {
     ModeCount = 3,
 } SysMode;
 
+typedef enum {
+    Angle,
+    Speed,
+    AngleSpeed,
+    SDOModeCount,
+} SensorDebuggingOutMode;
+
 SysMode g_SysMode = BalanceControl;
+SensorDebuggingOutMode g_SensorDebuggingOutMode = AngleSpeed;
 
 extern moto_ctrl_t g_moto_ctrl;
 
@@ -359,54 +367,62 @@ char *ParseUartCommand(char *str, int len) {
         return 0;
     }
     char numbuf[16];
-    char item = str[0];
-    //assert(str[1] == '=');
-    char *p = str + 2;
-    char *p_buf = numbuf;
-    char *end = str + 2 + imin(len - 2, 15);
-    while (p < end) {
-        char ch = *p;
-        if (ch == ';' || ch == '\r' || ch == '\n' || ch == ' ') {
-            p++;
-            break;
-        }
-        if (ch == '\0') {
-            break;
-        }
-        *p_buf = ch;
-        p++;
-        p_buf++;
-    }
-    *p_buf = '\0';
+    char item[16];
 
-    float num = atof(numbuf);
-    switch (item) {
-        case 'P':
-        case 'p':
-            angle_control_p = num;
-            break;
-        case 'D':
-        case 'd':
-            angle_control_d = num;
-            break;
-        default:
-            break;
+    char *p = strchr(str, '=');
+    if (!p) {
+        return 0;
     }
+    int itemLen = 0;
+    if (p - str > sizeof(item) - 1) {
+        itemLen = sizeof(item) - 1;
+    } else {
+        itemLen = p - str;
+    }
+    strncpy(item, str, itemLen);
+    size_t numLen = imin(len - itemLen - 1, sizeof(numbuf) - 1);
+    strncpy(numbuf, p + 1, numLen);
+    item[itemLen] = '\0';
+    numbuf[numLen] = '\0';
+    float num = atof(numbuf);
+
+    if (strcmp(item, "p") == 0) {
+        angle_control_p = num;
+    } else if (strcmp(item, "d") == 0) {
+        angle_control_d = num;
+    } else if (strcmp(item, "speed") == 0) {
+        speed_set = num;
+    } else if (strcmp(item, "speed_p") == 0) {
+        speed_control_p = num;
+    } else if (strcmp(item, "speed_i") == 0) {
+        speed_control_i = num;
+    }
+    printf("%s was set\r\n", item);
     return p;
 }
 
 void ProcessUartRecvBuffer() {
-    char *buf = recvBuf;
-    int len = recvLen;
-    while (len > 0) {
-        char *new_buf = ParseUartCommand(buf, len);
-        if (!new_buf) {
-            break;
-        }
-        len -= (int) (new_buf - buf);
-        buf = new_buf;
-    }
+    char *cmd_start = recvBuf;
+    int remainLen = recvLen;
 
+    while (remainLen > 0) {
+        char *p = cmd_start;
+        int len;
+        for (len = 0; len < remainLen; len++) {
+            if (*p == ';') {
+                p++;
+                remainLen--;
+                break;
+            }
+            p++;
+        }
+        remainLen -= len;
+        if (len > 0) {
+            ParseUartCommand(cmd_start, len);
+        }
+        cmd_start = p;
+
+    }
     // recv_buf_processed = 1;
 }
 
@@ -415,9 +431,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         if (recvLen < RECV_BUF_SIZE - 1) {
             if (recvData == '\r' || recvData == '\n') {
                 if (recvLen > 0) {
+                    recvBuf[recvLen] = '\0';
                     ProcessUartRecvBuffer();
                 }
-                recvBuf[recvLen] = '\0';
                 recvLen = 0;
             } else {
                 recvBuf[recvLen++] = recvData;
@@ -436,6 +452,12 @@ void UserTask(void) {
             g_SysMode = BalanceControl;
         }
         SetWorkMode();
+    }
+    if (ReadUserButton1() == 1) {
+        g_SensorDebuggingOutMode++;
+        if (g_SensorDebuggingOutMode >= SDOModeCount) {
+            g_SensorDebuggingOutMode = Angle;
+        }
     }
 
     switch (g_SysMode) {
@@ -467,7 +489,69 @@ void PrintIrSensorData(uint8_t data) {
     s[3] = IR_C(data & 0x08u);
     s[4] = IR_C(data & 0x10u);
     s[5] = IR_C(data & 0x20u);
+    s[6] = '\0';
     printf("[IR]: %s\r\n", s);
+}
+
+// Reverses a string 'str' of length 'len'
+void reverse(char *str, int len) {
+    int i = 0, j = len - 1, temp;
+    while (i < j) {
+        temp = str[i];
+        str[i] = str[j];
+        str[j] = temp;
+        i++;
+        j--;
+    }
+}
+
+// Converts a given integer x to string str[].
+// d is the number of digits required in the output.
+// If d is more than the number of digits in x,
+// then 0s are added at the beginning.
+int intToStr(int x, char str[], int d) {
+    int i = 0;
+    while (x) {
+        str[i++] = (x % 10) + '0';
+        x = x / 10;
+    }
+
+    // If number of digits required is more, then
+    // add 0s at the beginning
+    while (i < d)
+        str[i++] = '0';
+
+    reverse(str, i);
+    str[i] = '\0';
+    return i;
+}
+
+// Converts a floating-point/double number to a string.
+void ftoa(float n, char *res, int afterpoint) {
+    if (n < 0) {
+        n = -n;
+        *res++ = '-';
+    }
+    // Extract integer part
+    int ipart = (int) n;
+
+    // Extract floating part
+    float fpart = n - (float) ipart;
+
+    // convert integer part to string
+    int i = intToStr(ipart, res, 0);
+
+    // check for display option after point
+    if (afterpoint != 0) {
+        res[i] = '.'; // add dot
+
+        // Get the value of fraction part upto given no.
+        // of points after dot. The third parameter
+        // is needed to handle cases like 233.007
+        fpart = fpart * pow(10, afterpoint);
+
+        intToStr((int) fpart, res + i + 1, afterpoint);
+    }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
@@ -501,6 +585,41 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                     }
                     printf("[speed] motor pulse: L=%d, R=%d, ratio: %.2f...\r\n",
                            g_moto_ctrl.left_moto_pulse, g_moto_ctrl.right_moto_pulse, r);
+                    printf("[ctrl] motor speed ctrl: L=%d/1000, R=%d/1000\r\n",
+                           (int) (g_moto_ctrl.left_ctrl * 1000.f), (int) (g_moto_ctrl.right_ctrl * 1000.f));
+#ifdef KALMAN_FILTER_GYRO
+                    float angle = g_mpu6050.Angle_Kalman;
+#else
+                    float angle = g_mpu6050.Angle_Complement_1st;
+#endif
+                    char s[10];
+                    ftoa(angle, s, 3);
+                    printf("[angle] angle=%s degree\r\n", s);
+
+                    // ftoa(angle, angle_ctrl, 3);
+                    // g_moto_ctrl.angle_ctrl
+                    // g_moto_ctrl.speed
+
+                    printf("[angle] angle=%s degree\r\n", s);
+                }
+#define STABLE_TIME 3
+#define FWD_TIME 12
+#define TURN_TIME 2
+                uint32_t secs_m = secs % (STABLE_TIME + FWD_TIME + STABLE_TIME+ TURN_TIME);
+                if (secs_m < STABLE_TIME) {
+                    speed_set = 0;
+                } else if (secs_m < STABLE_TIME + FWD_TIME) {
+                    speed_set = 10;
+                } else if (secs_m < STABLE_TIME + FWD_TIME + STABLE_TIME/2) {
+                    speed_set = 0;
+                } else if (secs_m < STABLE_TIME + FWD_TIME + STABLE_TIME/2 + TURN_TIME) {
+                    speed_set = 6;
+                    speed_cor_left = 1/1.2f;
+                    speed_cor_right = 1.4f;
+                } else if (secs_m < STABLE_TIME + FWD_TIME + STABLE_TIME/2 + TURN_TIME + STABLE_TIME/2) {
+                    speed_cor_right = DEF_COR;
+                    speed_cor_left = 1;
+                    speed_set = 0;
                 }
                 break;
             case DotMatrix:
@@ -525,10 +644,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             case 0:
                 if (period_100ms == 0) { // per 100ms
                     CalculateSpeed();
+
+                    g_moto_ctrl.moto_pulse = (float) (g_moto_ctrl.left_moto_pulse + g_moto_ctrl.right_moto_pulse) / 2.f;
+                    g_moto_ctrl.speed = g_moto_ctrl.moto_pulse * CAR_SPEED_CONSTANT;
+
+                    char s[10];
+                    ftoa(g_moto_ctrl.speed, s, 3);
+                    printf("[speed] speed=%s\r\n", s);
+#ifdef SPEED_CTRL
                     SpeedControl();
+#endif
                 }
+#ifdef SPEED_CTRL
                 SpeedControlOutput(5);
                 DirectionControlOutput(5);
+#endif
                 MotoOutput();
                 if (g_SysMode == 0) {
                     MotoSpeedOut();
@@ -552,10 +682,36 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                 }
                 break;
             case 4:
-                Uart_OSC_ShowWave(g_mpu6050.Angle_Complement_1st,
-                                  (int) (g_moto_ctrl.angle_ctrl * 10.f),
-                                  (int) (g_moto_ctrl.angle_ctrl_p * 10.f),
-                                  (int) (g_moto_ctrl.angle_ctrl_d * 10.f));
+                switch (g_SensorDebuggingOutMode) {
+                    case Angle: {
+#ifdef KALMAN_FILTER_GYRO
+                        float angle = g_mpu6050.Angle_Kalman;
+#else
+                        float angle = g_mpu6050.Angle_Complement_1st;
+#endif
+                        Uart_OSC_ShowWave(angle * 100,
+                                          (int) (g_moto_ctrl.angle_ctrl * 100.f),
+                                          (int) (g_moto_ctrl.angle_ctrl_p * 100.f),
+                                          (int) (g_moto_ctrl.angle_ctrl_d * 100.f));
+                        break;
+                    }
+                    case Speed:
+                        Uart_OSC_ShowWave(
+                                g_moto_ctrl.left_moto_pulse,
+                                g_moto_ctrl.right_moto_pulse,
+                                (int) (g_moto_ctrl.left_ctrl * 100.f),
+                                (int) (g_moto_ctrl.right_ctrl * 100.f));
+                        break;
+                    case AngleSpeed:
+                        Uart_OSC_ShowWave(
+                                (int) (g_moto_ctrl.left_ctrl * 100.f),
+                                (int) (g_moto_ctrl.right_ctrl * 100.f),
+                                (int) (g_moto_ctrl.angle_ctrl * 100.f),
+                                (int) (g_moto_ctrl.speed * 100.f));
+                        break;
+                    default:
+                        break;
+                }
                 break;
             default:
                 break;

@@ -47,8 +47,10 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+// #define SPEED_DIFF_CTRL
+// #define KALMAN_FILTER_GYRO
+// #define SPEED_DIFF_CTRL
 #define SPEED_CTRL
-#define KALMAN_FILTER_GYRO
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

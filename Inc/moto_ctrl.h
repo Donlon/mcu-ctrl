@@ -3,13 +3,27 @@
 
 #include "stm32f1xx_hal.h"
 
-#define  CAR_ANGLE_SET        0.f
+// #define  CAR_ANGLE_SET        0.f
+#define  CAR_ANGLE_SET        2.1f
 #define  CAR_ANGLE_SPEED_SET  0.f
-#define  ANGLE_CONTROL_P      0.18f  // P=0.042 D=0.0015
-#define  ANGLE_CONTROL_D      0.01f
+// #define  ANGLE_CONTROL_P      0.67f  // P=0.042 D=0.0015
+// #define  ANGLE_CONTROL_P      0.067f  // P=0.042 D=0.0015
+#define  ANGLE_CONTROL_P      0.30f  // P=0.042 D=0.0015
+#define  ANGLE_CONTROL_I      0.020f
+// #define  ANGLE_CONTROL_D      0.007f
+#define  ANGLE_CONTROL_D      0.015f
+
+
+#define DEF_COR (1/1.15f)
 
 extern float angle_control_p;
 extern float angle_control_d;
+extern float speed_set;
+extern float speed_diff;
+extern float speed_cor_left;
+extern float speed_cor_right;
+extern float speed_control_p;
+extern float speed_control_i;
 
 #define  WHEEL_DIAMETER       82.0f  // 82mm
 #define  WHEEL_PERIMETER      (PI*WHEEL_DIAMETER)
@@ -17,7 +31,7 @@ extern float angle_control_d;
 #define  MOTO_GEARBOX_RATE    4.4f  // 1:4.4 1360RPM
 #define  SPEED_CONTROL_PERIOD 100.f // 100ms
 #define  CAR_SPEED_CONSTANT   (1000.0f/SPEED_CONTROL_PERIOD/ENCODE_CONSTANT)
-#define  SPEED_CONTROL_P      0.02f    //0.03
+#define  SPEED_CONTROL_P      -0.1f    //0.03
 #define  SPEED_CONTROL_I      0.0000f
 
 #define  DIR_CONTROL_PERIOD   10.f // 10ms
@@ -43,7 +57,7 @@ typedef struct {
     int16_t left_moto_pulse;
     int16_t right_moto_pulse;
 
-    float speed_set;
+    // float speed_set;
 
     float moto_pulse;
     float speed;
@@ -59,7 +73,7 @@ typedef struct {
     float direction_diff;
     float direction_ctrl;
 
-#ifdef SPEED_CTRL
+#ifdef SPEED_DIFF_CTRL
     float left_speed;
     float right_speed;
     float left_positon;
@@ -77,7 +91,7 @@ typedef struct {
     float speed_ctrl_period;
     float direction_ctrl_period;
 
-    // for PWM output
+    // for PWM output /Voltage
     float left_ctrl;
     float right_ctrl;
 
@@ -110,9 +124,9 @@ void SpeedControl(void);
 
 void DirectionControl(void);
 
-void SpeedControlOutput(uint8_t period);
+void SpeedControlOutput(float period);
 
-void DirectionControlOutput(uint8_t period);
+void DirectionControlOutput(float period);
 
 void MotoOutput(void);
 

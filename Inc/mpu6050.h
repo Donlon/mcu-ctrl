@@ -143,7 +143,7 @@ typedef struct {
     float angle_y;
     float angle_z;
 
-    float Angle_Kalman;
+    float Angle_Kalman; // degree
     float Gyro_Kalman;
     float Angle_Complement_1st;
     float Angle_Complement_2nd;

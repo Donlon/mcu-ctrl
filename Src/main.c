@@ -116,7 +116,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  puts("System up.");
+  puts("\r");
+  puts("\r");
+  puts("\r");
+  puts("==============================\r");
+  puts("========= System up. =========\r");
+  puts("==============================\r");
   SetWorkMode();
   while (1) {
     UserTask();

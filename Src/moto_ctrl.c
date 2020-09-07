@@ -10,13 +10,19 @@ extern mpu6050_t g_mpu6050;
 
 float angle_control_p = ANGLE_CONTROL_P;
 float angle_control_d = ANGLE_CONTROL_D;
+float speed_set = 0;
+// float speed_diff = 0;
+float speed_cor_left = 1.f;
+float speed_cor_right = DEF_COR;
+float speed_control_p = SPEED_CONTROL_P;
+float speed_control_i = SPEED_CONTROL_I;
 
 moto_ctrl_t g_moto_ctrl;
 
 void Moto_Ctrl_Init(void) {
     Motor_Stop();
     memset(&g_moto_ctrl, 0, sizeof(moto_ctrl_t));
-    g_moto_ctrl.speed_set = 0;
+    speed_set = 0;
 }
 
 void AngleControl(void) {
@@ -24,7 +30,13 @@ void AngleControl(void) {
     float p = (CAR_ANGLE_SET - g_mpu6050.Angle_Kalman) * angle_control_p;
     float d = (CAR_ANGLE_SPEED_SET - g_mpu6050.Gyro_Kalman) * angle_control_d;
 #else
+    // float angle_diff = CAR_ANGLE_SET - g_mpu6050.Angle_Complement_1st;
+    // float p = angle_diff * angle_diff / 12.f *  angle_control_p;
+    // if (angle_diff < 0) {
+    //     p = -p;
+    // }
     float p = (CAR_ANGLE_SET - g_mpu6050.Angle_Complement_1st) * angle_control_p;
+    // float i = (CAR_ANGLE_SET - g_mpu6050.Angle_Complement_1st) * ANGLE_CONTROL_I;
     float d = (CAR_ANGLE_SPEED_SET - g_mpu6050.gyro_scale_x) * angle_control_d;
 #endif
     g_moto_ctrl.angle_ctrl_p = p;
@@ -33,41 +45,45 @@ void AngleControl(void) {
 }
 
 void SpeedControl(void) {
+#ifdef SPEED_CTRL
     float diff;
     g_moto_ctrl.moto_pulse = (float) (g_moto_ctrl.left_moto_pulse + g_moto_ctrl.right_moto_pulse) / 2.f;
     g_moto_ctrl.speed = g_moto_ctrl.moto_pulse * CAR_SPEED_CONSTANT;
-    diff = g_moto_ctrl.speed - g_moto_ctrl.speed_set;
-    g_moto_ctrl.positon += (diff * SPEED_CONTROL_I);
+    diff = g_moto_ctrl.speed - speed_set;
+    g_moto_ctrl.positon += (diff * speed_control_i);
 
     g_moto_ctrl.speed_ctrl_last = g_moto_ctrl.speed_ctrl_next;
-    g_moto_ctrl.speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.positon;
+    g_moto_ctrl.speed_ctrl_next = diff * speed_control_p + g_moto_ctrl.positon;
     g_moto_ctrl.speed_diff = g_moto_ctrl.speed_ctrl_next - g_moto_ctrl.speed_ctrl_last;
+#endif
 
-#ifdef SPEED_CTRL
-	g_moto_ctrl.left_speed = g_moto_ctrl.left_moto_pulse * CAR_SPEED_CONSTANT;
-	diff =  g_moto_ctrl.left_speed - g_moto_ctrl.speed_set ;
-	g_moto_ctrl.left_positon += ( diff * SPEED_CONTROL_I ) ;
+#ifdef SPEED_DIFF_CTRL
+    g_moto_ctrl.left_speed = g_moto_ctrl.left_moto_pulse * CAR_SPEED_CONSTANT;
+    diff = g_moto_ctrl.left_speed - g_moto_ctrl.speed_set;
+    g_moto_ctrl.left_positon += (diff * SPEED_CONTROL_I);
 
-	g_moto_ctrl.left_speed_ctrl_last = g_moto_ctrl.left_speed_ctrl_next;
-	g_moto_ctrl.left_speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.left_positon;
-	g_moto_ctrl.left_speed_diff = g_moto_ctrl.left_speed_ctrl_next - g_moto_ctrl.left_speed_ctrl_last;
+    g_moto_ctrl.left_speed_ctrl_last = g_moto_ctrl.left_speed_ctrl_next;
+    g_moto_ctrl.left_speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.left_positon;
+    g_moto_ctrl.left_speed_diff = g_moto_ctrl.left_speed_ctrl_next - g_moto_ctrl.left_speed_ctrl_last;
 
-	g_moto_ctrl.right_speed =  g_moto_ctrl.right_moto_pulse * CAR_SPEED_CONSTANT;
-	diff = g_moto_ctrl.right_speed - g_moto_ctrl.speed_set;
-	g_moto_ctrl.right_positon += (diff * SPEED_CONTROL_I);
+    g_moto_ctrl.right_speed = g_moto_ctrl.right_moto_pulse * CAR_SPEED_CONSTANT;
+    diff = g_moto_ctrl.right_speed - g_moto_ctrl.speed_set;
+    g_moto_ctrl.right_positon += (diff * SPEED_CONTROL_I);
 
-	g_moto_ctrl.right_speed_ctrl_last = g_moto_ctrl.right_speed_ctrl_next;
-	g_moto_ctrl.right_speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.right_positon;
-	g_moto_ctrl.right_speed_diff = g_moto_ctrl.right_speed_ctrl_next - g_moto_ctrl.right_speed_ctrl_last;
+    g_moto_ctrl.right_speed_ctrl_last = g_moto_ctrl.right_speed_ctrl_next;
+    g_moto_ctrl.right_speed_ctrl_next = diff * SPEED_CONTROL_P + g_moto_ctrl.right_positon;
+    g_moto_ctrl.right_speed_diff = g_moto_ctrl.right_speed_ctrl_next - g_moto_ctrl.right_speed_ctrl_last;
 #endif
 }
 
-void SpeedControlOutput(uint8_t period) {
-#ifdef SPEED_CTRL
-    g_moto_ctrl.left_speed = g_moto_ctrl.left_speed_diff * (g_moto_ctrl.speed_ctrl_period + period)/SPEED_CONTROL_PERIOD +
-                                                        g_moto_ctrl.left_speed_ctrl_last;
-    g_moto_ctrl.right_speed = g_moto_ctrl.right_speed_diff * (g_moto_ctrl.speed_ctrl_period + period)/SPEED_CONTROL_PERIOD +
-                                                        g_moto_ctrl.right_speed_ctrl_last;
+void SpeedControlOutput(float period) { ///ms
+#ifdef SPEED_DIFF_CTRL
+    g_moto_ctrl.left_speed =
+            g_moto_ctrl.left_speed_diff * (g_moto_ctrl.speed_ctrl_period + period) / SPEED_CONTROL_PERIOD +
+            g_moto_ctrl.left_speed_ctrl_last;
+    g_moto_ctrl.right_speed =
+            g_moto_ctrl.right_speed_diff * (g_moto_ctrl.speed_ctrl_period + period) / SPEED_CONTROL_PERIOD +
+            g_moto_ctrl.right_speed_ctrl_last;
 #endif
 
     g_moto_ctrl.speed = g_moto_ctrl.speed_diff * (g_moto_ctrl.speed_ctrl_period + period) / SPEED_CONTROL_PERIOD +
@@ -101,7 +117,7 @@ void DirectionControl(void) {
                g_moto_ctrl.track_in == 0x07) {    // 111000
         g_moto_ctrl.direction_ctrl_next = -20 * DIR_CONTROL_P + g_mpu6050.gyro_scale_z * DIR_CONTROL_D;
     } else if (g_moto_ctrl.track_in == 0x3F) {
-        g_moto_ctrl.speed_set = 0;
+        speed_set = 0;
         g_moto_ctrl.direction_ctrl_next = 0;
     } else {
         g_moto_ctrl.direction_ctrl_next = 0;
@@ -109,7 +125,7 @@ void DirectionControl(void) {
     g_moto_ctrl.direction_diff = g_moto_ctrl.direction_ctrl_next - g_moto_ctrl.direction_ctrl_last;
 }
 
-void DirectionControlOutput(uint8_t period) {
+void DirectionControlOutput(float period) {
     g_moto_ctrl.direction =
             g_moto_ctrl.direction_diff * (g_moto_ctrl.direction_ctrl_period + period) / DIR_CONTROL_PERIOD +
             g_moto_ctrl.direction_ctrl_last;
@@ -121,10 +137,12 @@ void DirectionControlOutput(uint8_t period) {
 }
 
 void MotoOutput(void) {
-#ifdef SPEED_CTRL
-	g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.left_speed;
-	g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.right_speed;
+#ifdef SPEED_DIFF_CTRL
+    g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.left_speed;
+    g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.right_speed;
 #else
+
+#ifdef SPEED_CTRL
 #if 0
     g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed - g_moto_ctrl.direction;
     g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed + g_moto_ctrl.direction;
@@ -132,7 +150,14 @@ void MotoOutput(void) {
     g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed;
     g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl - g_moto_ctrl.speed;
 #endif
+#else
+    g_moto_ctrl.left_ctrl = g_moto_ctrl.angle_ctrl;
+    g_moto_ctrl.right_ctrl = g_moto_ctrl.angle_ctrl;
 #endif
+
+#endif
+    // g_moto_ctrl.left_ctrl -= speed_diff;
+    // g_moto_ctrl.right_ctrl += speed_diff;
 }
 
 void MotoSpeedOut(void) {
@@ -145,6 +170,8 @@ void MotoSpeedOut(void) {
     leftVal = -g_moto_ctrl.left_ctrl;
     rightVal = -g_moto_ctrl.right_ctrl;
 #endif
+    leftVal *= speed_cor_left;
+    rightVal *= speed_cor_right;
 
     if (leftVal > 0) {
         leftVal += MOTOR_OUT_DEAD_VAL;
@@ -185,6 +212,7 @@ void SetMotorVoltage(float fLeftVoltage, float fRightVoltage) {
         right_forward((uint16_t) (-1 * fRightVoltage * PWM_PERIOD));
     }
 }
+
 #define LEFT_PWM_CHANNEL TIM_CHANNEL_4
 #define RIGHT_PWM_CHANNEL TIM_CHANNEL_3
 
